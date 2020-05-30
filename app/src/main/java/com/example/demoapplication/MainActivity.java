@@ -9,6 +9,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -25,16 +27,21 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity {
 
     FusedLocationProviderClient mFusedLocationClient;
-    TextView textLocation;
+    TextView textLocation,textAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textLocation=findViewById(R.id.textLocation);
+        textAddress=findViewById(R.id.textAddress);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
     }
@@ -91,6 +98,11 @@ public class MainActivity extends AppCompatActivity {
                             requestNewLocationData();
                         } else {
                             textLocation.setText("Latitude : "+location.getLatitude()+" Longitude : "+location.getLongitude());
+                            try {
+                                getAddress(location.getLatitude(),location.getLongitude());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -116,6 +128,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             Location location = locationResult.getLastLocation();
+            try {
+                getAddress(location.getLatitude(),location.getLongitude());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             textLocation.setText("Latitude : "+location.getLatitude()+" Longitude : "+location.getLongitude());
         }
     };
@@ -125,6 +142,12 @@ public class MainActivity extends AppCompatActivity {
         getLastLocation();
     }
 
+    private void getAddress(double lat,double lon) throws IOException {
+        Geocoder geocoder=new Geocoder(this, Locale.getDefault());
+        List<Address> addresses=geocoder.getFromLocation(lat,lon,1);
+        Address address=addresses.get(0);
+        textAddress.setText(address.getAddressLine(0));
+    }
 
 
 }
